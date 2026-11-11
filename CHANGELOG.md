@@ -4,6 +4,9 @@ Changes that affect users, newest first. The GitHub release notes list every pul
 
 ## Unreleased
 
+- **TabAgent beside Kev.** `python -m experiments.baselines.run --method kev-zs` scores a served Kev decision model
+  as one more baseline, through the same text views, folds and metrics; a docs page reports the released Kev models
+  on the five public set-retrieval tables, and the README gains a short News section.
 - **Claim first, and maintainers' side of the bar.** A pull request's "Why" links the issue it closes (a maintainer
   waives it for a small fix with the `no-issue` label), and "How it was tested" names the exact command in backticks;
   the description check refuses either gap. CONTRIBUTING.md adds the claim steps ("I'm taking this", one pull request

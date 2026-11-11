@@ -52,6 +52,15 @@
 
 </div>
 
+## News
+
+- **Nov 2026 · TabAgent beside Kev.** TabAgent's CPU head beats the released Kev decision models, up to a 27B model
+  on an 80 GB GPU, on τ²-bench retail, telecom and the combined table (P@R 77.3 against 45.7), is level on airline,
+  and is faster per decision. Kev-27B leads on SkillsBench skill selection (90.6 against 79.3).
+  [Results and method](docs/news/kev.md)
+- **Oct 2026 · Paper v3 and release 0.1.1.** [arXiv 2602.16429](https://arxiv.org/abs/2602.16429) ·
+  [changelog](CHANGELOG.md)
+
 ## Why
 
 - **Agents pay a frontier LLM for the same kind of decision again and again.** Which tools to shortlist, which skill

@@ -11,6 +11,7 @@ directory holds the learned rungs, which need PyTorch and, for the LLM rungs, a 
 | Few-shot | `fewshot` | Llama-3.1-8B-Instruct with two demonstrations on the retrieval and classification rows; on the policy/reward rows the paper uses GPT-5.4 (Sec. 4.2), which runs here through any OpenAI-compatible endpoint (the skill-gating prompt is included). |
 | FT-SLM | `ft-slm` | Llama-3.1-8B-Instruct fine-tuned with LoRA per fold to generate the relevant candidate numbers (set retrieval) or the class word (operation). On Mind2Web element selection (about 50 candidates per step) it is a pointwise LoRA cross-encoder on the same model. |
 | SLM family (App. F, Fig. 8) | `fewshot`, `ft-slm`, `ft-ce` with `--model llama-3.2-1b`, `llama-3.2-3b`, `llama-3.1-8b`, `qwen2.5-7b` | The same prompts and recipes for each model; `ft-ce` is the LoRA cross-encoder. |
+| Not in the paper ([TabAgent beside Kev](../../docs/news/kev.md)) | `kev-zs` with `--model jaredpalmer/kev-27b` (or `kev-9b`, `kev-4b`) | A served [Kev](https://github.com/jaredpalmer/kev) decision model, zero-shot, on the τ² and skill-selection tables: six fixed question wordings, and for each test fold the one with the best P@R on the other folds (`kev.py`). |
 
 Every trainable baseline is trained only on the training folds of the paper's task folds
 (`tabagent.datasets.folds(name)`); rows of a task never straddle folds, and the few-shot demonstrations'
@@ -32,6 +33,9 @@ python -m experiments.baselines.run --dataset skillsbench/skill-select --method 
 python -m experiments.baselines.run --dataset mind2web/element-150 --method ft-slm
 OPENAI_API_KEY=... OPENAI_BASE_URL=... \
 python -m experiments.baselines.run --dataset skillsbench/skill-gating --method fewshot --model gpt-5.4
+
+# Kev, served by its own repository (python -m kev.serve --run jaredpalmer/kev-27b --port 8008)
+python -m experiments.baselines.run --dataset tau2/airline --method kev-zs --model jaredpalmer/kev-27b
 
 # Build and inspect every prompt without loading a model (no GPU)
 python -m experiments.baselines.run --dataset tau2/airline --method ft-slm --dry-run \

@@ -209,6 +209,8 @@ nav:
       - Reproducing the paper: reproducing.md
       - Public datasets: datasets.md
   - Changelog: changelog.md
+  - News:
+      - TabAgent beside Kev: news/kev.md
   - Project:
       - project/index.md
       - Citation: project/citation.md

@@ -5,7 +5,7 @@
 Methods: ``dsr-zs``, ``dsr-ft`` (add ``--synth K`` for Real+synth), ``fewshot``, ``ft-slm``, ``ft-ce`` (the
 LoRA cross-encoder). Fine-tuned methods are trained on the training folds of the paper's task folds only
 (``tabagent.datasets.folds``) and score the held-out fold. ``--dry-run`` builds every LLM prompt without
-loading model weights.
+loading model weights. ``kev-zs`` scores a served Kev decision model, zero-shot (see ``kev.py``).
 
 The output holds, per metric, the value of every decision (averaged over seeds), the decision -> group map,
 and a summary with bootstrap CIs (decision level and task level), so that paired CIs against TabAgent can
@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 
 from experiments.baselines import dsr as D
+from experiments.baselines import kev as K
 from experiments.baselines import llm as L
 from experiments.baselines.presets import PRESETS, Preset
 from tabagent import datasets
@@ -34,8 +35,8 @@ from tabagent.table import DecisionTable
 
 ROOT = Path(__file__).resolve().parents[2]
 
-METHODS = ("dsr-zs", "dsr-ft", "fewshot", "ft-slm", "ft-ce")
-DETERMINISTIC = {"dsr-zs", "fewshot"}
+METHODS = ("dsr-zs", "dsr-ft", "fewshot", "ft-slm", "ft-ce", "kev-zs")
+DETERMINISTIC = {"dsr-zs", "fewshot", "kev-zs"}
 DEFAULT_RECIPE = "in-batch"
 
 
@@ -234,6 +235,9 @@ def parse_args(argv=None):
     p.add_argument("--max-groups", type=int, default=None, help="smoke test: keep the first N groups")
     p.add_argument("--download", action="store_true", help="fetch the upstream release if not cached")
     p.add_argument("--accept-license", action="store_true", help="for sources that need an opt-in")
+    p.add_argument("--kev-url", default="http://127.0.0.1:8008", help="kev-zs: the Kev server")
+    p.add_argument("--kev-revision", default=None, help="kev-zs: the served weights (default: --model)")
+    p.add_argument("--kev-cache", default=None, help="kev-zs: answers cache (default: under results/kev/)")
     p.add_argument("--out", default=None)
     return p.parse_args(argv)
 
@@ -242,7 +246,7 @@ def main(argv=None) -> dict:
     args = parse_args(argv)
     if args.synth and args.method != "dsr-ft":
         raise SystemExit("--synth applies to dsr-ft only")
-    if args.dry_run and args.method.startswith("dsr"):
+    if args.dry_run and (args.method.startswith("dsr") or args.method == "kev-zs"):
         raise SystemExit("--dry-run applies to the LLM methods")
     preset = PRESETS[args.dataset]
     table = datasets.load(args.dataset, download=args.download, accept_license=args.accept_license)
@@ -258,6 +262,18 @@ def main(argv=None) -> dict:
         print(f"{args.dataset} | {args.method} | seed {seed}", flush=True)
         if args.method.startswith("dsr"):
             outs[seed], config = run_dsr(table, preset, folds, args.method, seed or 0, args)
+        elif args.method == "kev-zs":
+            model = L.resolve_model(args.model)
+            cache = args.kev_cache or ROOT / "results" / "kev" / f"{default_out(args).stem}.jsonl"
+            outs[seed], config = K.kev_scores(
+                table,
+                args.dataset,
+                folds,
+                preset.metrics,
+                url=args.kev_url,
+                revision=args.kev_revision or model,
+                cache=Path(cache),
+            )
         else:
             outs[seed], config = run_llm(table, preset, folds, args.method, seed or 0, args, backend)
     runtime = time.time() - t0
